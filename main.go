@@ -1,10 +1,9 @@
 package main
 
 import (
+	"gsdb/internal/sheet"
 	"log"
 	"net"
-
-	pg_query "github.com/pganalyze/pg_query_go/v4"
 )
 
 // TODO: use a config file for this and move to a package
@@ -17,17 +16,16 @@ const (
 func handleIncomingRequest(conn net.Conn) {
 	defer conn.Close()
 
-	buffer := make([]byte, 1024)
+	buffer := make([]byte, 1024) // TODO: better buffer allocation
 	_, err := conn.Read(buffer)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	result, err := pg_query.ParseToJSON(string(buffer))
+	err = sheet.ParseStatement(string(buffer))
 	if err != nil {
 		panic(err)
 	}
-	conn.Write([]byte(result))
 }
 
 func main() {
