@@ -2,6 +2,8 @@ package main
 
 import (
 	"gsdb/internal/sheet"
+	"gsdb/internal/sql"
+	"io/ioutil"
 	"log"
 	"net"
 )
@@ -22,13 +24,32 @@ func handleIncomingRequest(conn net.Conn) {
 		log.Fatal(err)
 	}
 
-	err = sheet.ParseStatement(string(buffer))
+	cred, err := ioutil.ReadFile("./credential.json")
 	if err != nil {
-		panic(err)
+		log.Fatal(err) // TODO: wrap error
+	}
+	client, err := sheet.New(cred) // TODO: add config to accept cred from file or from env
+	if err != nil {
+		log.Fatal(err) // TODO: wrap error
+	}
+
+	err = sql.NewPostgreSQL(client).Execute(string(buffer))
+	if err != nil {
+		log.Fatal(err) // TODO: wrap error
 	}
 }
 
 func main() {
+	cred, err := ioutil.ReadFile("./credential.json")
+	if err != nil {
+		log.Fatal(err) // TODO: wrap error
+	}
+	client, err := sheet.New(cred) // TODO: add config to accept cred from file or from env
+	if err != nil {
+		log.Fatal(err) // TODO: wrap error
+	}
+	sql.NewPostgreSQL(client)
+
 	listen, err := net.Listen(TYPE, HOST+":"+PORT)
 	if err != nil {
 		log.Fatal(err)
