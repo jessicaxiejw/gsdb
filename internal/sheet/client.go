@@ -10,20 +10,19 @@ import (
 )
 
 const (
-	defaultFolderName = "gsdb" // TODO: configurable folder name
-
-	folder      = "application/vnd.google-apps.folder"
-	spreadsheet = "application/vnd.google-apps.spreadsheet"
+	folder      = "folder"
+	spreadsheet = "spreadsheet"
 )
 
 type Client struct {
 	parentID string
+	root     string
 
 	driveService  *drive.Service
 	sheetsService *sheets.Service
 }
 
-func New(credentialJSON []byte) (*Client, error) {
+func New(credentialJSON []byte, root string) (*Client, error) {
 	ctx := context.TODO()
 
 	driveService, err := drive.NewService(ctx, option.WithCredentialsJSON(credentialJSON))
@@ -39,14 +38,15 @@ func New(credentialJSON []byte) (*Client, error) {
 	client := &Client{
 		driveService:  driveService,
 		sheetsService: sheetsService,
+		root:          root,
 	}
 
-	id, err := client.fetchFileID(folder, defaultFolderName)
+	id, err := client.fetchFileID(folder, root)
 	if err != nil {
 		return nil, err // TODO: wrap error
 	}
 	if id == "" {
-		return nil, fmt.Errorf("cannot find a shared folder named %s. Did you forget to share the folder with %s", defaultFolderName, "") // TODO: wrap error, add the email of the service account
+		return nil, fmt.Errorf("cannot find a shared folder named %s. Did you forget to share the folder with %s", root, "") // TODO: wrap error, add the email of the service account
 	}
 	client.parentID = id
 
@@ -67,11 +67,11 @@ func (c *Client) fetchFileID(kind, name string) (string, error) {
 	}
 
 	if len(resp.Files) == 0 {
-		return "", fmt.Errorf("cannnot find %s named %s", kind, name)
+		return "", fmt.Errorf("cannnot find a %s named %s", kind, name)
 	}
 
 	if len(resp.Files) > 1 {
-		return "", fmt.Errorf("there are more than 1 %s shared with this service account that is named %s.\nPlease ensure there are only 1 %s named %s", kind, defaultFolderName, kind, defaultFolderName) // TODO: wrap error, list the links of folders
+		return "", fmt.Errorf("there are more than one %s shared with this service account that is named %s.\nPlease ensure there are only 1 %s named %s", kind, c.root, kind, c.root) // TODO: wrap error, list the links of folders
 	}
 
 	return resp.Files[0].Id, nil
