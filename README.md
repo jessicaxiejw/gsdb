@@ -1,6 +1,6 @@
 # gsdb
 
-gsdb stands for Google Sheet Database. It is a database service that is backed by Google Sheet.
+gsdb stands for Google Sheet Database. It is a database service that is backed and stored using Google Sheet.
 
 (This repo is under active development. It is extremely beta. However, any contribution is much appreciated)
 
