@@ -53,21 +53,21 @@ func (p *PostgreSQL) createTable(stmt *pg_query.CreateStmt) error {
 func (p *PostgreSQL) insert(stmt *pg_query.InsertStmt) error {
 	tableName := stmt.GetRelation().GetRelname()
 
-	cols := stmt.GetCols()
-	columnNames := make([]string, len(cols))
-	for index, col := range cols {
-		columnNames[index] = col.GetResTarget().Name
+	values := map[string][]interface{}{} // key is the column name, the value is the array of values under that column
+	valueLists := stmt.GetSelectStmt().GetSelectStmt().GetValuesLists()
+	indexToColumnMapping := map[int]string{}
+	for index, col := range stmt.GetCols() {
+		name := col.GetResTarget().Name
+		indexToColumnMapping[index] = name
+		values[name] = make([]interface{}, len(valueLists))
 	}
 
-	valueLists := stmt.GetSelectStmt().GetSelectStmt().GetValuesLists()
-	values := make([][]interface{}, len(valueLists))
 	for i, valueList := range valueLists {
-		items := valueList.GetList().GetItems()
-		values[i] = make([]interface{}, len(items))
-		for j, item := range items {
-			values[i][j] = item.GetAConst().GetSval().GetSval()
+		for j, item := range valueList.GetList().GetItems() {
+			colName := indexToColumnMapping[j]
+			values[colName][i] = item.GetAConst().GetSval().GetSval()
 		}
 	}
 
-	return p.client.InsertRows(tableName, columnNames, values)
+	return p.client.InsertRows(tableName, values)
 }
