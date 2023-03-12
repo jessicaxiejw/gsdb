@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/pganalyze/pg_query_go/v4 v4.2.0
+	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
 	google.golang.org/api v0.111.0
 )

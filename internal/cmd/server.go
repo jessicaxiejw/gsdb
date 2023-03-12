@@ -4,9 +4,9 @@ import (
 	"gsdb/internal/sheet"
 	"gsdb/internal/sql"
 	"io/ioutil"
-	"log"
 	"net"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -66,7 +66,7 @@ var serverCmd = &cobra.Command{
 				}
 				err = client.Execute(string(buffer))
 				if err != nil {
-					log.Fatal(err) // TODO: wrap error
+					log.Error(err) // TODO: wrap error
 				}
 			}()
 		}
