@@ -15,12 +15,13 @@ func NewPostgreSQL(client DBClient) *PostgreSQL {
 	return &PostgreSQL{client: client}
 }
 
-func (p *PostgreSQL) Execute(statement string) error {
+func (p *PostgreSQL) Execute(statement string) (string, error) {
 	result, err := pg_query.Parse(statement)
 	if err != nil {
-		return err // TODO: wrap this error
+		return "", err // TODO: wrap this error
 	}
 	fmt.Println(pg_query.ParseToJSON(statement)) // TODO: delete
+	output := ""
 	for _, stmt := range result.GetStmts() {
 		node := stmt.GetStmt().GetNode()
 		switch node.(type) {
@@ -30,11 +31,14 @@ func (p *PostgreSQL) Execute(statement string) error {
 		case *pg_query.Node_InsertStmt:
 			insertStmt := node.(*pg_query.Node_InsertStmt).InsertStmt
 			err = p.insert(insertStmt)
+		case *pg_query.Node_SelectStmt:
+			selectStmt := node.(*pg_query.Node_SelectStmt).SelectStmt
+			output, err = p.query(selectStmt)
 		default:
 			err = fmt.Errorf("unfortunately, we do not support %s at this time", reflect.TypeOf(node))
 		}
 	}
-	return err
+	return output, err
 }
 
 func (p *PostgreSQL) createTable(stmt *pg_query.CreateStmt) error {
@@ -70,4 +74,19 @@ func (p *PostgreSQL) insert(stmt *pg_query.InsertStmt) error {
 	}
 
 	return p.client.InsertRows(tableName, values)
+}
+
+func (p *PostgreSQL) query(stmt *pg_query.SelectStmt) (string, error) {
+	// tableName := stmt.GetFromClause()[0].GetRangeVar().GetRelname() // TODO: make JOIN, UNION work
+
+	// columns := make([]string, len(stmt.GetTargetList()))
+	// for index, target := range stmt.GetTargetList() {
+	// 	columns[index] = target.GetResTarget().GetName()
+	// }
+
+	// where := map[string][]interface{}{}
+	// whereClause := stmt.GetWhereClause()
+	// if whereClause != nil {
+	// }
+	return "", nil
 }

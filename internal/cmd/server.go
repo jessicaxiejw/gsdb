@@ -64,10 +64,13 @@ var serverCmd = &cobra.Command{
 				if err != nil {
 					log.Fatal(err) // TODO: wrap error
 				}
-				err = client.Execute(string(buffer))
+				output, err := client.Execute(string(buffer))
 				if err != nil {
 					log.Error(err) // TODO: wrap error
+					conn.Write([]byte(err.Error()))
+					return
 				}
+				conn.Write([]byte(output))
 			}()
 		}
 
