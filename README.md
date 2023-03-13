@@ -46,4 +46,14 @@ cd gsdb
 go run main.go server -c <path to the JSON credential file of your service account> // eg/ go run main.go server -c credential.json
 ```
 
+To add a table
+```
+curl telnet://localhost:9001 <<< "CREATE TABLE Persons (
+    LastName varchar(255),
+    FirstName varchar(255),
+    City varchar(255)
+);
+"
+```
+
 I am planning on releasing the binary in brew and other linux distros. However, for now, you will have to run the go binary.
